@@ -1,3 +1,4 @@
+# plots lattice parameter at varying temperatures, Brian Lam
 import csv
 import matplotlib.pyplot as plt
 
