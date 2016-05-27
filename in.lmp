@@ -67,7 +67,7 @@
   fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"      &
                     title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam" &
                     screen no &
-					file thermo.${T}.dat
+					file thermo.dat
   # Run simulation.
   run               ${t}
 #------------------------------------------------------------------------------#
