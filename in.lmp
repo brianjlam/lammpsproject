@@ -15,6 +15,9 @@
   variable          T0     equal 0.7*$T    # Initial temperature.
   variable          damp_T equal 100*${dt} # Thermostat damp parameter.
   variable          damp_P equal 100*${dt} # Barostat damp parameter.
+  
+  # Looping variables.
+  # variable          T index 0 100 200 300 400 500 600 700 800 # loop temperature
 #------------------------------------------------------------------------------#
 
 
@@ -64,7 +67,13 @@
   fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"      &
                     title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam" &
                     screen no &
-					file thermo.dat
+					file thermo.${T}.dat
   # Run simulation.
   run               ${t}
 #------------------------------------------------------------------------------#
+
+#----------------------------- Next loop --------------------------------------#
+  # loop to next temperature
+  #clear
+  #next T
+  #jump in.lmp
