@@ -1,0 +1,70 @@
+# Rodrigo Freitas - rodrigof@berkeley.edu 
+
+
+#--------------------------- General variables --------------------------------#
+  # Input parameters.
+  variable          a    equal 2.9115 # Lattice parameter.
+  variable          n    equal 2      # System size.
+  variable          T    equal 800    # Simulation temperature.
+  variable          P    equal 0      # Simulation pressure.
+  variable          t    equal 100000 # Simulation time.
+  variable          dt   equal 0.001  # Timestep.
+  variable          dt_t equal 100    # Thermo output stride.
+
+  # Simulation variables.
+  variable          T0     equal 0.7*$T    # Initial temperature.
+  variable          damp_T equal 100*${dt} # Thermostat damp parameter.
+  variable          damp_P equal 100*${dt} # Barostat damp parameter.
+#------------------------------------------------------------------------------#
+
+
+#---------------------------- Atomic setup ------------------------------------#
+  units             metal
+
+  # Create atoms.
+  lattice           bcc ${a}  # bcc lattice with unit cell size = a.
+  region            sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi ...
+  create_box        1 sim_box # make box using region 'sim_box'.
+  create_atoms      1 box     # place atoms within region on lattice.
+
+  # Interatomic potential information.
+  pair_style        eam
+  pair_coeff        * * Fe.eam
+  neigh_modify      delay 0
+  timestep          ${dt}
+#------------------------------------------------------------------------------#
+
+
+#-------------------- Fixes, computes, and constraints ------------------------#
+  # Integration and thermostat.
+  fix               f1 all nph iso ${P} ${P} ${damp_P}
+  fix               f2 all langevin ${T} ${T} ${damp_T} 666
+#------------------------------------------------------------------------------#
+
+
+#--------------------------- Output setup -------------------------------------#
+  # Setup output variables.
+  variable          step equal step
+  variable          E    equal etotal/atoms
+  variable          ke   equal ke/atoms
+  variable          pe   equal pe/atoms
+  variable          lp   equal (xhi-xlo)/${n} 
+
+  # Thermo output.
+  thermo_style      custom step pe ke
+  thermo            1000
+#------------------------------------------------------------------------------#
+
+
+#----------------------------- Run simulation ---------------------------------#
+  # Initial temperature to accelerate equilibration.
+  velocity          all create ${T0} 666 dist gaussian
+
+  # Print information to output file.
+  fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"      &
+                    title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam" &
+                    screen no &
+					file thermo.dat
+  # Run simulation.
+  run               ${t}
+#------------------------------------------------------------------------------#
