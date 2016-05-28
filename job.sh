@@ -13,6 +13,6 @@ cd $PBS_O_WORKDIR
 
 ${MPIRUN} -np ${NPROCS} lmp_mpi    \
           -in     loopin.lmp           \
-          -log    data/lammps.log  \
+          -log    output/lammps.log  \
           -screen none             \
           -var    RANDOM ${RANDOM} 
