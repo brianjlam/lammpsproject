@@ -1,4 +1,4 @@
-# Rodrigo Freitas - rodrigof@berkeley.edu 
+# Brian Lam - brian.lam@berkeley.edu 
 
 
 #--------------------------- General variables --------------------------------#
@@ -67,13 +67,13 @@
   fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"      &
                     title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam" &
                     screen no &
-					file thermo.dat
+					file thermo${T}.dat
   # Run simulation.
   run               ${t}
 #------------------------------------------------------------------------------#
 
 #----------------------------- Next loop --------------------------------------#
   # loop to next temperature
-  #clear
-  #next T
-  #jump in.lmp
+  # clear
+  # next T
+  # jump in.lmp
