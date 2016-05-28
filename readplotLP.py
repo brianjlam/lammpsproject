@@ -3,53 +3,56 @@ from numpy import mean
 import csv
 import matplotlib.pyplot as plt
 
-def averageLP(filein, T):
-	
-	# parse filein to return average lattice parameter
 
-	fin = open(filein, 'r')
-	lp = 0
-	n = 0
+def averageLP(filein):
+    """Parse filein to return average lattice parameter."""
 
-	reader = csv.reader(fin, delimiter=' ')
-	skiptime = 100
-	for i in range(skiptime):
-		next(reader)
-	for row in reader:
-		lp += float(row[4])
-		n += 1.0
-	lp = lp/n
+    with open(filein, 'r') as fin:
+        reader = csv.reader(fin, delimiter=' ')
+        for i in range(100):
+            next(reader)
+        lp = 0
+        n = 0
+        for row in reader:
+            lp += float(row[4])
+            n += 1.0
+        lp = lp/n
+    return lp
 
-	fout = open('output/latparams.dat', 'a')
-	fout.write(str(T)+' '+str(lp)+'\n')
-	fin.close()
-	fout.close()
-	return
 
-Tlist = range(0,900,100)
-for T in Tlist:
-	inputname = 'output/thermo' + str(T) + '.dat'
-	averageLP(inputname, T)
+def writeLP():
+    """Write LP to whitespace delimited table."""
+
+    with open('output/latparams.dat', 'w') as newf:
+        newf.write('# T [K] LP [Angstrom]\n')
+
+    for T in range(0, 900, 100):
+        inputname = 'output/thermo' + str(T) + '.dat'
+        lp = averageLP(inputname, T)
+        with open('output/latparams.dat', 'a') as fout:
+            fout.write(str(T)+' '+str(lp)+'\n')
+
 
 def plotLP():
+    """Plot LP vs. T from latparams."""
 
-	# plots lattice parameter at varying temperatures, Brian Lam
+    f = open('output/latparams.dat', 'r')
+    T = []
+    lp = []
+    reader = csv.reader(f, delimiter=' ')
+    next(reader)
+    for row in reader:
+        T.append(row[0])
+        lp.append(row[1])
+    fig = plt.figure
+    plt.plot(T, lp, 'bo')
+    plt.axis([-100, 900, 2.85, 3])
+    plt.xlabel('Temperature [K]')
+    plt.ylabel('Lattice Parameter [Angstroms]')
+    plt.title('Lattice Parameter vs. Temperature for Fe')
+    plt.grid()
+    plt.show()
+    return
 
-	f = open('output/latparams.dat', 'r')
-	T = []
-	lp = []
-	reader = csv.reader(f, delimiter=' ')
-	for row in reader:
-		T.append(row[0])
-		lp.append(row[1])
-	fig = plt.figure
-	plt.plot(T, lp, 'bo')
-	plt.axis([-100, 900, 2.85, 3])
-	plt.xlabel('Temperature [K]')
-	plt.ylabel('Lattice Parameter [Angstroms]')
-	plt.title('Lattice Parameter vs. Temperature for Fe')
-	plt.grid()
-	plt.show()
-	fig.savefig('lpplot.pdf')
 
 plotLP()
