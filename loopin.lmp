@@ -5,7 +5,7 @@
   variable          a    equal 2.9115 # Lattice parameter.
   variable          n    equal 14     # System size.
   variable          P    equal 0      # Simulation pressure.
-  variable          t    equal 100000 # Simulation time.
+  variable          t    equal 400000 # Simulation time.
   variable          dt   equal 0.001  # Timestep.
   variable          dt_t equal 100    # Thermo output stride.
   variable          T    index 0 100 200 300 400 500 600 700 800 # Loop simulation temperature.
