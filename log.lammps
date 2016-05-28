@@ -1,0 +1,1014 @@
+LAMMPS (14 May 2016)
+# Brian Lam - brian.lam@berkeley.edu
+
+#--------------------------- General variables --------------------------------#
+  # Input parameters.
+  variable          a    equal 2.9115 # Lattice parameter.
+  variable          n    equal 3      # System size.
+  variable          P    equal 0      # Simulation pressure.
+  variable          t    equal 100000 # Simulation time.
+  variable          dt   equal 0.001  # Timestep.
+  variable          dt_t equal 100    # Thermo output stride.
+  variable          T    index 0 100 200 300 400 500 600 700 800 # Loop simulation temperature.
+
+  # Simulation variables.
+  variable          T0     equal 0.7*${T}    # Initial temperature.
+  variable          T0     equal 0.7*0    
+  variable          damp_T equal 100*${dt} # Thermostat damp parameter.
+  variable          damp_T equal 100*0.001 
+  variable          damp_P equal 100*${dt} # Barostat damp parameter.
+  variable          damp_P equal 100*0.001 
+
+#------------------------------------------------------------------------------#
+
+
+#---------------------------- Atomic setup ------------------------------------#
+  units             metal
+
+  # Create atoms.
+  lattice           bcc ${a}  # bcc lattice with unit cell size = a.
+  lattice           bcc 2.9115  
+Lattice spacing in x,y,z = 2.9115 2.9115 2.9115
+  region            sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi ...
+  region            sim_box block 0 3 0 ${n} 0 ${n} 
+  region            sim_box block 0 3 0 3 0 ${n} 
+  region            sim_box block 0 3 0 3 0 3 
+  create_box        1 sim_box # make box using region 'sim_box'.
+Created orthogonal box = (0 0 0) to (8.7345 8.7345 8.7345)
+  1 by 1 by 1 MPI processor grid
+  create_atoms      1 box     # place atoms within region on lattice.
+Created 54 atoms
+
+  # Interatomic potential information.
+  pair_style        eam
+  pair_coeff        * * Fe.eam
+  neigh_modify      delay 0
+  timestep          ${dt}
+  timestep          0.001
+#------------------------------------------------------------------------------#
+
+
+#-------------------- Fixes, computes, and constraints ------------------------#
+  # Integration and thermostat.
+  fix               f1 all nph iso ${P} ${P} ${damp_P}
+  fix               f1 all nph iso 0 ${P} ${damp_P}
+  fix               f1 all nph iso 0 0 ${damp_P}
+  fix               f1 all nph iso 0 0 0.1
+  fix               f2 all langevin ${T} ${T} ${damp_T} 666
+  fix               f2 all langevin 0 ${T} ${damp_T} 666
+  fix               f2 all langevin 0 0 ${damp_T} 666
+  fix               f2 all langevin 0 0 0.1 666
+#------------------------------------------------------------------------------#
+
+
+#--------------------------- Output setup -------------------------------------#
+  # Setup output variables.
+  variable          step equal step
+  variable          E    equal etotal/atoms
+  variable          ke   equal ke/atoms
+  variable          pe   equal pe/atoms
+  variable          lp   equal (xhi-xlo)/${n}
+  variable          lp   equal (xhi-xlo)/3
+
+  # Thermo output.
+  thermo_style      custom step pe ke
+  thermo            1000
+#------------------------------------------------------------------------------#
+
+
+#----------------------------- Run simulation ---------------------------------#
+  # Initial temperature to accelerate equilibration.
+  velocity          all create ${T0} 666 dist gaussian
+  velocity          all create 0 666 dist gaussian
+
+  # Print information to output file.
+  fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo0.dat
+  # Run simulation.
+  run               ${t}
+  run               100000
+Neighbor list info ...
+  1 neighbor list requests
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 6.4091
+  ghost atom cutoff = 6.4091
+  binsize = 3.20455 -> bins = 3 3 3
+Memory usage per processor = 2.7598 Mbytes
+Step PotEng KinEng 
+       0   -231.10307            0 
+    1000   -231.73051 1.7487874e-26 
+    2000   -231.72843 1.0718799e-26 
+    3000   -231.72784 1.8873289e-26 
+    4000   -231.72274 1.0400547e-26 
+    5000   -231.71181 1.7654961e-26 
+    6000   -231.72903 1.372489e-26 
+    7000   -231.70552 2.3307239e-26 
+    8000   -231.72712 1.3632192e-26 
+    9000   -231.72012 7.8053445e-27 
+   10000   -231.72144 7.1044764e-27 
+   11000   -231.72793 1.604188e-26 
+   12000    -231.5961 1.9363611e-26 
+   13000   -231.73163 1.1655383e-26 
+   14000   -231.73025 1.9997017e-26 
+   15000   -231.69977 2.2919478e-26 
+   16000   -231.73158 1.6913929e-26 
+   17000   -231.71591 1.3354849e-26 
+   18000   -231.72935 9.882283e-27 
+   19000   -231.68641 9.5522497e-27 
+   20000   -231.71976 1.5007861e-26 
+   21000   -231.73258 1.5959718e-26 
+   22000    -231.7275 2.6664801e-26 
+   23000   -231.73247 1.6135194e-26 
+   24000   -231.72613 2.2951335e-26 
+   25000   -231.71719 1.4642576e-26 
+   26000    -231.7247 1.9714188e-26 
+   27000   -231.72953 2.210065e-26 
+   28000   -231.71634 2.2688751e-26 
+   29000   -231.72832 2.1171933e-26 
+   30000   -231.73281 1.5208918e-26 
+   31000   -231.71722 1.6602594e-26 
+   32000   -231.73274 1.5474251e-26 
+   33000   -231.73223 1.422357e-26 
+   34000   -231.73273 1.7099667e-26 
+   35000   -231.72531 1.6107565e-26 
+   36000   -231.72946 1.1709161e-26 
+   37000   -231.71756 1.054045e-26 
+   38000   -231.69976 1.5748917e-26 
+   39000   -231.72294 1.1862118e-26 
+   40000   -231.69686 1.9267359e-26 
+   41000   -231.72862 1.6205141e-26 
+   42000    -231.7019 1.5640675e-26 
+   43000   -231.70299 1.7537998e-26 
+   44000     -231.727 1.7866893e-26 
+   45000    -231.7133 1.6719585e-26 
+   46000   -231.73027 1.5289373e-26 
+   47000    -231.7065 2.6480797e-26 
+   48000    -231.7155 1.2454689e-26 
+   49000   -231.70737 1.9534229e-26 
+   50000   -231.72782 2.0894527e-26 
+   51000   -231.73187 1.9046887e-26 
+   52000    -231.7211 2.298115e-26 
+   53000   -231.72681 2.1097291e-26 
+   54000   -231.72164 1.7487838e-26 
+   55000   -231.72818 1.5083082e-26 
+   56000   -231.69744 1.9087672e-26 
+   57000   -231.73277  1.85013e-26 
+   58000   -231.71243 1.8150295e-26 
+   59000   -231.73283 1.4555338e-26 
+   60000   -231.68976 1.1712381e-26 
+   61000   -231.73277 1.4277698e-26 
+   62000   -231.71208 1.793199e-26 
+   63000   -231.72854 2.1035045e-26 
+   64000   -231.73261 2.343173e-26 
+   65000   -231.66954 2.1647074e-26 
+   66000   -231.69779 1.637065e-26 
+   67000   -231.72812 1.8169743e-26 
+   68000   -231.72758 1.5673584e-26 
+   69000    -231.7328 1.6465438e-26 
+   70000   -231.72328 2.6795995e-26 
+   71000   -231.73016 1.6285659e-26 
+   72000   -231.72863 1.5450819e-26 
+   73000   -231.73241 1.6316478e-26 
+   74000   -231.71548 1.7121352e-26 
+   75000   -231.72724 1.7306688e-26 
+   76000     -231.732 1.8138549e-26 
+   77000   -231.64145 1.9210037e-26 
+   78000   -231.73213 1.4209687e-26 
+   79000   -231.72689 1.4852908e-26 
+   80000   -231.70094 1.2351702e-26 
+   81000   -231.73082 1.297445e-26 
+   82000   -231.73085 2.0662603e-26 
+   83000   -231.72824 2.0554344e-26 
+   84000    -231.6957 2.0200689e-26 
+   85000   -231.73276 1.5555952e-26 
+   86000   -231.66671 1.9645993e-26 
+   87000   -231.73193 1.6301553e-26 
+   88000   -231.72246 1.6559439e-26 
+   89000   -231.71133 1.6380116e-26 
+   90000   -231.73261 1.988347e-26 
+   91000    -231.7177 1.0189948e-26 
+   92000   -231.73283 1.1338192e-26 
+   93000   -231.68823 1.8372932e-26 
+   94000   -231.73258 1.5711089e-26 
+   95000   -231.72679 1.6446974e-26 
+   96000   -231.72832 1.3288182e-26 
+   97000   -231.73122 1.7075473e-26 
+   98000   -231.72714 1.1061994e-26 
+   99000    -231.7321 1.2304473e-26 
+  100000   -231.72805 2.026951e-26 
+Loop time of 6.73028 on 1 procs for 100000 steps with 54 atoms
+
+Performance: 1283.750 ns/day, 0.019 hours/ns, 14858.216 timesteps/s
+99.9% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.7193     | 5.7193     | 5.7193     |   0.0 | 84.98
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.32986    | 0.32986    | 0.32986    |   0.0 |  4.90
+Output  | 0.0010576  | 0.0010576  | 0.0010576  |   0.0 |  0.02
+Modify  | 0.60546    | 0.60546    | 0.60546    |   0.0 |  9.00
+Other   |            | 0.07464    |            |       |  1.11
+
+Nlocal:    54 ave 54 max 54 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    801 ave 801 max 801 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    2376 ave 2376 max 2376 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2376
+Ave neighs/atom = 44
+Neighbor list builds = 0
+Dangerous builds = 0
+#------------------------------------------------------------------------------#
+
+#----------------------------- Next loop --------------------------------------#
+  # loop to next temperature
+  clear
+  next T
+  jump loopin.lmp
+# Brian Lam - brian.lam@berkeley.edu
+
+#--------------------------- General variables --------------------------------#
+  # Input parameters.
+  variable          a    equal 2.9115 # Lattice parameter.
+  variable          n    equal 3      # System size.
+  variable          P    equal 0      # Simulation pressure.
+  variable          t    equal 100000 # Simulation time.
+  variable          dt   equal 0.001  # Timestep.
+  variable          dt_t equal 100    # Thermo output stride.
+  variable          T    index 0 100 200 300 400 500 600 700 800 # Loop simulation temperature.
+
+  # Simulation variables.
+  variable          T0     equal 0.7*${T}    # Initial temperature.
+  variable          T0     equal 0.7*100    
+  variable          damp_T equal 100*${dt} # Thermostat damp parameter.
+  variable          damp_T equal 100*0.001 
+  variable          damp_P equal 100*${dt} # Barostat damp parameter.
+  variable          damp_P equal 100*0.001 
+
+#------------------------------------------------------------------------------#
+
+
+#---------------------------- Atomic setup ------------------------------------#
+  units             metal
+
+  # Create atoms.
+  lattice           bcc ${a}  # bcc lattice with unit cell size = a.
+  lattice           bcc 2.9115  
+Lattice spacing in x,y,z = 2.9115 2.9115 2.9115
+  region            sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi ...
+  region            sim_box block 0 3 0 ${n} 0 ${n} 
+  region            sim_box block 0 3 0 3 0 ${n} 
+  region            sim_box block 0 3 0 3 0 3 
+  create_box        1 sim_box # make box using region 'sim_box'.
+Created orthogonal box = (0 0 0) to (8.7345 8.7345 8.7345)
+  1 by 1 by 1 MPI processor grid
+  create_atoms      1 box     # place atoms within region on lattice.
+Created 54 atoms
+
+  # Interatomic potential information.
+  pair_style        eam
+  pair_coeff        * * Fe.eam
+  neigh_modify      delay 0
+  timestep          ${dt}
+  timestep          0.001
+#------------------------------------------------------------------------------#
+
+
+#-------------------- Fixes, computes, and constraints ------------------------#
+  # Integration and thermostat.
+  fix               f1 all nph iso ${P} ${P} ${damp_P}
+  fix               f1 all nph iso 0 ${P} ${damp_P}
+  fix               f1 all nph iso 0 0 ${damp_P}
+  fix               f1 all nph iso 0 0 0.1
+  fix               f2 all langevin ${T} ${T} ${damp_T} 666
+  fix               f2 all langevin 100 ${T} ${damp_T} 666
+  fix               f2 all langevin 100 100 ${damp_T} 666
+  fix               f2 all langevin 100 100 0.1 666
+#------------------------------------------------------------------------------#
+
+
+#--------------------------- Output setup -------------------------------------#
+  # Setup output variables.
+  variable          step equal step
+  variable          E    equal etotal/atoms
+  variable          ke   equal ke/atoms
+  variable          pe   equal pe/atoms
+  variable          lp   equal (xhi-xlo)/${n}
+  variable          lp   equal (xhi-xlo)/3
+
+  # Thermo output.
+  thermo_style      custom step pe ke
+  thermo            1000
+#------------------------------------------------------------------------------#
+
+
+#----------------------------- Run simulation ---------------------------------#
+  # Initial temperature to accelerate equilibration.
+  velocity          all create ${T0} 666 dist gaussian
+  velocity          all create 70 666 dist gaussian
+
+  # Print information to output file.
+  fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo100.dat
+  # Run simulation.
+  run               ${t}
+  run               100000
+Neighbor list info ...
+  1 neighbor list requests
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 6.4091
+  ghost atom cutoff = 6.4091
+  binsize = 3.20455 -> bins = 3 3 3
+Memory usage per processor = 2.7598 Mbytes
+Step PotEng KinEng 
+       0   -231.10307   0.47955514 
+    1000    -231.1202   0.58960818 
+    2000    -231.0271   0.66124281 
+    3000   -231.14313   0.70557289 
+    4000   -230.95617   0.68581539 
+    5000   -231.00631   0.75849512 
+    6000   -231.00738   0.83849722 
+    7000   -231.15405   0.59605051 
+    8000   -231.11135    0.5764124 
+    9000   -231.01283   0.55886823 
+   10000   -230.89331   0.69080267 
+   11000   -231.10346   0.70570813 
+   12000   -231.04996   0.63215001 
+   13000   -231.09296   0.77104061 
+   14000   -230.98333   0.70217687 
+   15000   -230.94494   0.73433657 
+   16000   -230.92451   0.71278323 
+   17000   -231.12167   0.64685998 
+   18000    -231.0336   0.74146724 
+   19000   -231.14983   0.67856452 
+   20000   -231.04293   0.65528226 
+   21000   -230.97158   0.95345617 
+   22000    -231.1305   0.75274888 
+   23000   -231.10678   0.85214262 
+   24000    -231.1367   0.55425357 
+   25000   -231.06352   0.76556515 
+   26000   -230.95011   0.64330109 
+   27000   -230.99274   0.70826129 
+   28000   -230.99535   0.77622675 
+   29000   -231.07283   0.74028844 
+   30000   -230.99691   0.59556578 
+   31000   -230.96529   0.73723799 
+   32000   -231.15549   0.74471821 
+   33000   -231.06474   0.66628016 
+   34000   -231.06858   0.69564382 
+   35000   -231.00498   0.73702659 
+   36000   -230.99587   0.74530069 
+   37000   -231.00105   0.60909857 
+   38000   -231.08254   0.72972219 
+   39000   -231.14707   0.66592529 
+   40000   -230.74001   0.58632367 
+   41000   -231.00556   0.64141017 
+   42000   -231.09852    0.7090643 
+   43000   -231.19993   0.68857861 
+   44000   -230.94912   0.62219724 
+   45000    -231.0588   0.54839831 
+   46000   -231.19088   0.57280301 
+   47000    -231.1257   0.72896943 
+   48000   -230.93305   0.59939961 
+   49000   -230.93915   0.65529505 
+   50000   -231.04575   0.67512449 
+   51000    -231.0334   0.77319721 
+   52000   -231.05336   0.68179973 
+   53000   -231.00871   0.83268417 
+   54000   -231.04045   0.62622092 
+   55000   -230.99526   0.68261584 
+   56000   -230.98621   0.83626993 
+   57000   -231.20299   0.57649469 
+   58000   -231.12097   0.65669617 
+   59000   -231.17829   0.69997167 
+   60000   -231.05934   0.72603483 
+   61000   -231.10161   0.79103732 
+   62000   -231.09787   0.65482558 
+   63000   -231.10912   0.72280314 
+   64000   -231.18244   0.75052819 
+   65000   -231.07665   0.82095039 
+   66000   -230.93349   0.65700785 
+   67000   -230.95663   0.66949572 
+   68000   -231.16411    0.7184958 
+   69000   -231.17081   0.72533996 
+   70000   -231.02186   0.65475798 
+   71000   -231.08839    0.6954449 
+   72000   -230.96013   0.73907238 
+   73000    -231.0617   0.75481904 
+   74000    -231.0339    0.5743477 
+   75000   -231.04755   0.69527711 
+   76000   -230.98266   0.65543313 
+   77000   -230.96114   0.67336132 
+   78000   -231.03125   0.68113272 
+   79000   -231.02133   0.59490897 
+   80000   -231.08824   0.71221527 
+   81000   -231.05881   0.67957197 
+   82000   -231.16542   0.60326939 
+   83000   -231.12663   0.65639771 
+   84000   -231.03128   0.65190361 
+   85000   -231.04697   0.59875958 
+   86000   -231.18409   0.57411233 
+   87000   -230.98459   0.58444699 
+   88000   -231.03792   0.71289136 
+   89000   -231.12973    0.7354311 
+   90000   -230.97822   0.64226607 
+   91000   -231.10638   0.69503134 
+   92000   -231.14434    0.7204955 
+   93000   -230.94327   0.68477312 
+   94000   -230.98774   0.63206095 
+   95000    -230.9535   0.73688279 
+   96000   -230.99549   0.64833825 
+   97000   -231.04051    0.7346884 
+   98000   -230.98149   0.64879981 
+   99000   -231.00426   0.69939436 
+  100000   -231.03856    0.7068087 
+Loop time of 7.77082 on 1 procs for 100000 steps with 54 atoms
+
+Performance: 1111.852 ns/day, 0.022 hours/ns, 12868.656 timesteps/s
+99.9% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.7176     | 6.7176     | 6.7176     |   0.0 | 86.45
+Neigh   | 0.00039101 | 0.00039101 | 0.00039101 |   0.0 |  0.01
+Comm    | 0.32848    | 0.32848    | 0.32848    |   0.0 |  4.23
+Output  | 0.0010691  | 0.0010691  | 0.0010691  |   0.0 |  0.01
+Modify  | 0.64627    | 0.64627    | 0.64627    |   0.0 |  8.32
+Other   |            | 0.07704    |            |       |  0.99
+
+Nlocal:    54 ave 54 max 54 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    801 ave 801 max 801 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    2521 ave 2521 max 2521 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2521
+Ave neighs/atom = 46.6852
+Neighbor list builds = 3
+Dangerous builds = 0
+#------------------------------------------------------------------------------#
+
+#----------------------------- Next loop --------------------------------------#
+  # loop to next temperature
+  clear
+  next T
+  jump loopin.lmp
+# Brian Lam - brian.lam@berkeley.edu
+
+#--------------------------- General variables --------------------------------#
+  # Input parameters.
+  variable          a    equal 2.9115 # Lattice parameter.
+  variable          n    equal 3      # System size.
+  variable          P    equal 0      # Simulation pressure.
+  variable          t    equal 100000 # Simulation time.
+  variable          dt   equal 0.001  # Timestep.
+  variable          dt_t equal 100    # Thermo output stride.
+  variable          T    index 0 100 200 300 400 500 600 700 800 # Loop simulation temperature.
+
+  # Simulation variables.
+  variable          T0     equal 0.7*${T}    # Initial temperature.
+  variable          T0     equal 0.7*200    
+  variable          damp_T equal 100*${dt} # Thermostat damp parameter.
+  variable          damp_T equal 100*0.001 
+  variable          damp_P equal 100*${dt} # Barostat damp parameter.
+  variable          damp_P equal 100*0.001 
+
+#------------------------------------------------------------------------------#
+
+
+#---------------------------- Atomic setup ------------------------------------#
+  units             metal
+
+  # Create atoms.
+  lattice           bcc ${a}  # bcc lattice with unit cell size = a.
+  lattice           bcc 2.9115  
+Lattice spacing in x,y,z = 2.9115 2.9115 2.9115
+  region            sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi ...
+  region            sim_box block 0 3 0 ${n} 0 ${n} 
+  region            sim_box block 0 3 0 3 0 ${n} 
+  region            sim_box block 0 3 0 3 0 3 
+  create_box        1 sim_box # make box using region 'sim_box'.
+Created orthogonal box = (0 0 0) to (8.7345 8.7345 8.7345)
+  1 by 1 by 1 MPI processor grid
+  create_atoms      1 box     # place atoms within region on lattice.
+Created 54 atoms
+
+  # Interatomic potential information.
+  pair_style        eam
+  pair_coeff        * * Fe.eam
+  neigh_modify      delay 0
+  timestep          ${dt}
+  timestep          0.001
+#------------------------------------------------------------------------------#
+
+
+#-------------------- Fixes, computes, and constraints ------------------------#
+  # Integration and thermostat.
+  fix               f1 all nph iso ${P} ${P} ${damp_P}
+  fix               f1 all nph iso 0 ${P} ${damp_P}
+  fix               f1 all nph iso 0 0 ${damp_P}
+  fix               f1 all nph iso 0 0 0.1
+  fix               f2 all langevin ${T} ${T} ${damp_T} 666
+  fix               f2 all langevin 200 ${T} ${damp_T} 666
+  fix               f2 all langevin 200 200 ${damp_T} 666
+  fix               f2 all langevin 200 200 0.1 666
+#------------------------------------------------------------------------------#
+
+
+#--------------------------- Output setup -------------------------------------#
+  # Setup output variables.
+  variable          step equal step
+  variable          E    equal etotal/atoms
+  variable          ke   equal ke/atoms
+  variable          pe   equal pe/atoms
+  variable          lp   equal (xhi-xlo)/${n}
+  variable          lp   equal (xhi-xlo)/3
+
+  # Thermo output.
+  thermo_style      custom step pe ke
+  thermo            1000
+#------------------------------------------------------------------------------#
+
+
+#----------------------------- Run simulation ---------------------------------#
+  # Initial temperature to accelerate equilibration.
+  velocity          all create ${T0} 666 dist gaussian
+  velocity          all create 140 666 dist gaussian
+
+  # Print information to output file.
+  fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo200.dat
+  # Run simulation.
+  run               ${t}
+  run               100000
+Neighbor list info ...
+  1 neighbor list requests
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 6.4091
+  ghost atom cutoff = 6.4091
+  binsize = 3.20455 -> bins = 3 3 3
+Memory usage per processor = 2.7598 Mbytes
+Step PotEng KinEng 
+       0   -231.10307   0.95911028 
+    1000     -230.528    1.1937075 
+    2000   -230.29825    1.3081022 
+    3000   -230.47774    1.4453497 
+    4000   -230.28149    1.4924143 
+    5000   -230.22363    1.5309708 
+    6000   -230.22084     1.680658 
+    7000   -230.51949    1.3484207 
+    8000   -230.62065    1.1160095 
+    9000   -230.49436    1.2110523 
+   10000   -230.26134    1.5040497 
+   11000   -230.41047    1.4801076 
+   12000   -230.49565    1.2553334 
+   13000    -230.2144    1.2757488 
+   14000   -230.27509    1.6907174 
+   15000   -230.15167    1.2124196 
+   16000   -230.22772    1.2640651 
+   17000   -230.13463    1.3077977 
+   18000   -230.25039    1.3714357 
+   19000   -230.46318    1.3432235 
+   20000   -230.38249    1.2160401 
+   21000   -230.19509    1.8959662 
+   22000    -230.4924    1.4579145 
+   23000   -230.51549    1.6295593 
+   24000   -230.51905    1.0932577 
+   25000   -230.54588    1.5594842 
+   26000   -230.22159    1.3082723 
+   27000   -230.29938    1.3392275 
+   28000   -230.21112    1.5642024 
+   29000   -230.40416    1.4515263 
+   30000   -230.29856    1.2383736 
+   31000   -230.25525    1.4891899 
+   32000    -230.5425    1.4329013 
+   33000   -230.35589     1.283883 
+   34000   -230.36504    1.4062526 
+   35000    -230.3337    1.4959701 
+   36000   -230.21068     1.451506 
+   37000   -230.21182    1.2270702 
+   38000   -230.42824    1.4729332 
+   39000   -230.47503    1.2699613 
+   40000   -229.84005    1.2122123 
+   41000   -230.26263    1.3529237 
+   42000   -230.44118    1.4577088 
+   43000   -230.61804    1.3834602 
+   44000   -230.09124    1.2166345 
+   45000    -230.4178    1.1013616 
+   46000   -230.50439    1.4625325 
+   47000   -230.54997    1.3252948 
+   48000   -230.07673     1.410534 
+   49000   -230.23663    1.5457133 
+   50000   -230.22433    1.2535802 
+   51000   -230.30402    1.5885219 
+   52000   -230.20437    1.3142306 
+   53000   -230.12276    1.3890699 
+   54000   -230.37137     1.588137 
+   55000   -230.38834    1.2555484 
+   56000   -230.08506     1.538122 
+   57000   -230.42782    1.2141206 
+   58000     -230.346    1.1670097 
+   59000   -230.36141    1.4082956 
+   60000   -230.50043    1.5992105 
+   61000   -230.49167    1.4720324 
+   62000   -230.30243    1.4519862 
+   63000   -230.28233    1.7288193 
+   64000   -230.47753    1.6029093 
+   65000   -230.41402    1.6084413 
+   66000   -230.11963    1.2559975 
+   67000   -230.59523     1.280674 
+   68000   -230.33842    1.3068699 
+   69000    -230.2135    1.5035431 
+   70000   -230.50366    1.7504502 
+   71000    -230.5415     1.356635 
+   72000   -230.39038     1.652276 
+   73000    -230.3993    1.5248321 
+   74000   -229.96308    1.0851154 
+   75000   -230.38234    1.4120339 
+   76000   -230.45491    1.4580488 
+   77000   -230.11344    1.1030883 
+   78000   -230.34565     1.488076 
+   79000   -230.09617    1.4183041 
+   80000   -230.17032    1.2150135 
+   81000   -230.35795    1.3444247 
+   82000   -230.54165    1.3866007 
+   83000   -230.24405    1.4898367 
+   84000   -230.34501     1.370073 
+   85000   -230.71152    1.3707579 
+   86000   -230.49555    1.1833976 
+   87000   -230.19028    1.5235828 
+   88000    -230.2268    1.6793266 
+   89000   -230.32943    1.3659454 
+   90000   -230.32976    1.4575413 
+   91000   -230.21175    1.3998847 
+   92000   -230.41353    1.2969976 
+   93000   -230.14091    1.4975596 
+   94000   -230.38063    1.1130822 
+   95000    -230.1288     1.200292 
+   96000   -230.46951     1.463686 
+   97000   -230.44257    1.4100603 
+   98000   -230.30323    1.2828645 
+   99000   -230.32148    1.2937113 
+  100000   -230.54967    1.1346902 
+Loop time of 7.99292 on 1 procs for 100000 steps with 54 atoms
+
+Performance: 1080.957 ns/day, 0.022 hours/ns, 12511.077 timesteps/s
+99.9% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.9438     | 6.9438     | 6.9438     |   0.0 | 86.87
+Neigh   | 0.0008018  | 0.0008018  | 0.0008018  |   0.0 |  0.01
+Comm    | 0.32672    | 0.32672    | 0.32672    |   0.0 |  4.09
+Output  | 0.0010879  | 0.0010879  | 0.0010879  |   0.0 |  0.01
+Modify  | 0.64357    | 0.64357    | 0.64357    |   0.0 |  8.05
+Other   |            | 0.0769     |            |       |  0.96
+
+Nlocal:    54 ave 54 max 54 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    747 ave 747 max 747 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    2564 ave 2564 max 2564 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2564
+Ave neighs/atom = 47.4815
+Neighbor list builds = 6
+Dangerous builds = 0
+#------------------------------------------------------------------------------#
+
+#----------------------------- Next loop --------------------------------------#
+  # loop to next temperature
+  clear
+  next T
+  jump loopin.lmp
+# Brian Lam - brian.lam@berkeley.edu
+
+#--------------------------- General variables --------------------------------#
+  # Input parameters.
+  variable          a    equal 2.9115 # Lattice parameter.
+  variable          n    equal 3      # System size.
+  variable          P    equal 0      # Simulation pressure.
+  variable          t    equal 100000 # Simulation time.
+  variable          dt   equal 0.001  # Timestep.
+  variable          dt_t equal 100    # Thermo output stride.
+  variable          T    index 0 100 200 300 400 500 600 700 800 # Loop simulation temperature.
+
+  # Simulation variables.
+  variable          T0     equal 0.7*${T}    # Initial temperature.
+  variable          T0     equal 0.7*300    
+  variable          damp_T equal 100*${dt} # Thermostat damp parameter.
+  variable          damp_T equal 100*0.001 
+  variable          damp_P equal 100*${dt} # Barostat damp parameter.
+  variable          damp_P equal 100*0.001 
+
+#------------------------------------------------------------------------------#
+
+
+#---------------------------- Atomic setup ------------------------------------#
+  units             metal
+
+  # Create atoms.
+  lattice           bcc ${a}  # bcc lattice with unit cell size = a.
+  lattice           bcc 2.9115  
+Lattice spacing in x,y,z = 2.9115 2.9115 2.9115
+  region            sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi ...
+  region            sim_box block 0 3 0 ${n} 0 ${n} 
+  region            sim_box block 0 3 0 3 0 ${n} 
+  region            sim_box block 0 3 0 3 0 3 
+  create_box        1 sim_box # make box using region 'sim_box'.
+Created orthogonal box = (0 0 0) to (8.7345 8.7345 8.7345)
+  1 by 1 by 1 MPI processor grid
+  create_atoms      1 box     # place atoms within region on lattice.
+Created 54 atoms
+
+  # Interatomic potential information.
+  pair_style        eam
+  pair_coeff        * * Fe.eam
+  neigh_modify      delay 0
+  timestep          ${dt}
+  timestep          0.001
+#------------------------------------------------------------------------------#
+
+
+#-------------------- Fixes, computes, and constraints ------------------------#
+  # Integration and thermostat.
+  fix               f1 all nph iso ${P} ${P} ${damp_P}
+  fix               f1 all nph iso 0 ${P} ${damp_P}
+  fix               f1 all nph iso 0 0 ${damp_P}
+  fix               f1 all nph iso 0 0 0.1
+  fix               f2 all langevin ${T} ${T} ${damp_T} 666
+  fix               f2 all langevin 300 ${T} ${damp_T} 666
+  fix               f2 all langevin 300 300 ${damp_T} 666
+  fix               f2 all langevin 300 300 0.1 666
+#------------------------------------------------------------------------------#
+
+
+#--------------------------- Output setup -------------------------------------#
+  # Setup output variables.
+  variable          step equal step
+  variable          E    equal etotal/atoms
+  variable          ke   equal ke/atoms
+  variable          pe   equal pe/atoms
+  variable          lp   equal (xhi-xlo)/${n}
+  variable          lp   equal (xhi-xlo)/3
+
+  # Thermo output.
+  thermo_style      custom step pe ke
+  thermo            1000
+#------------------------------------------------------------------------------#
+
+
+#----------------------------- Run simulation ---------------------------------#
+  # Initial temperature to accelerate equilibration.
+  velocity          all create ${T0} 666 dist gaussian
+  velocity          all create 210 666 dist gaussian
+
+  # Print information to output file.
+  fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo300.dat
+  # Run simulation.
+  run               ${t}
+  run               100000
+Neighbor list info ...
+  1 neighbor list requests
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 6.4091
+  ghost atom cutoff = 6.4091
+  binsize = 3.20455 -> bins = 3 3 3
+Memory usage per processor = 2.7598 Mbytes
+Step PotEng KinEng 
+       0   -231.10307    1.4386654 
+    1000   -229.89969    1.7955922 
+    2000   -229.54518    2.0101696 
+    3000   -229.71016    2.1725147 
+    4000   -229.59685    2.3344886 
+    5000   -229.41226    2.3713095 
+    6000   -229.41572    2.1711766 
+    7000   -229.95831    2.0172313 
+    8000   -229.88019    1.7412672 
+    9000   -229.90833    1.8573762 
+   10000    -229.6009    2.4473109 
+   11000   -229.75161    2.1313659 
+   12000   -229.87125    1.8954702 
+   13000    -229.4204    1.7910003 
+   14000   -229.69845    2.5872795 
+   15000   -229.25862    1.8808442 
+   16000   -229.49584    1.8420884 
+   17000   -229.28311    1.7623734 
+   18000   -229.41518     1.837326 
+   19000   -229.92581    1.9374788 
+   20000   -230.18935    2.3363926 
+   21000   -229.73661    2.5154555 
+   22000   -229.72478    2.1288171 
+   23000   -229.62493    2.1454489 
+   24000   -229.64228    1.8482546 
+   25000    -229.2612    2.0188338 
+   26000   -229.43739    1.8810966 
+   27000   -229.86214    2.3823306 
+   28000   -229.42824    2.2085595 
+   29000   -230.31908    2.0927266 
+   30000   -229.77421    1.7424118 
+   31000   -229.58847    2.2248026 
+   32000   -229.72385    2.1999331 
+   33000   -229.46801    2.0216806 
+   34000   -229.48438    1.7474646 
+   35000   -229.82994    2.0937111 
+   36000   -229.34783    2.4593138 
+   37000   -229.78806    2.2271234 
+   38000   -230.06118    2.4352886 
+   39000   -229.79046     2.100802 
+   40000   -229.32337    2.3697318 
+   41000   -229.70428    2.0524803 
+   42000   -229.70061    2.3136586 
+   43000   -229.73083    1.8048837 
+   44000   -229.48865    1.7702545 
+   45000   -229.92751    1.8065178 
+   46000   -229.97244    1.9975867 
+   47000    -229.8673    1.9817097 
+   48000   -229.46671     1.700717 
+   49000   -229.58809    2.2672297 
+   50000   -229.80931    2.0091007 
+   51000    -229.6665    2.2886458 
+   52000   -229.85074    2.1394289 
+   53000   -229.90968    2.4210849 
+   54000   -229.75521    2.1730573 
+   55000   -229.40721    2.1916083 
+   56000   -228.91257    2.6853823 
+   57000   -229.82012    2.3864159 
+   58000   -229.96304    1.5957985 
+   59000   -229.91542    2.3033311 
+   60000   -229.67785    2.4700664 
+   61000   -229.52858    2.4186453 
+   62000   -229.78907    2.1738984 
+   63000   -229.30559    2.1933244 
+   64000   -230.04437    2.2650886 
+   65000   -229.82568    2.2270686 
+   66000   -229.67535    2.2108402 
+   67000   -229.74436    2.2451106 
+   68000   -229.54752    1.7586329 
+   69000   -229.56855    2.4643461 
+   70000   -229.68863    2.1702845 
+   71000   -229.66209    1.6858295 
+   72000   -229.50761    2.2059032 
+   73000   -229.79466    2.4035759 
+   74000   -229.43638    1.9593532 
+   75000   -229.59703    2.8585769 
+   76000    -229.7362    2.2907306 
+   77000   -229.52201    1.7137275 
+   78000   -229.55071    2.1011752 
+   79000   -229.25364    2.0378701 
+   80000   -229.58577    2.3432976 
+   81000   -229.81685    2.2385976 
+   82000   -229.78547    2.4442309 
+   83000   -229.63157    2.1259544 
+   84000   -229.22841    1.7117358 
+   85000    -230.0496    1.8587925 
+   86000   -229.82048    1.8478271 
+   87000   -229.52327     2.206846 
+   88000   -229.46851    2.3206137 
+   89000   -229.72478    2.1359093 
+   90000   -229.64079    2.0228495 
+   91000    -229.4602    2.2659322 
+   92000   -229.71464    1.9110526 
+   93000   -229.12127    2.4285407 
+   94000   -230.08673    2.0282648 
+   95000    -229.0717    2.0556087 
+   96000   -229.64038    2.2527869 
+   97000    -229.9678     2.201243 
+   98000   -229.64354    2.1457263 
+   99000   -229.47263    1.8686202 
+  100000    -229.8992    1.9569754 
+Loop time of 8.06719 on 1 procs for 100000 steps with 54 atoms
+
+Performance: 1071.004 ns/day, 0.022 hours/ns, 12395.885 timesteps/s
+99.9% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 7.0243     | 7.0243     | 7.0243     |   0.0 | 87.07
+Neigh   | 0.00086379 | 0.00086379 | 0.00086379 |   0.0 |  0.01
+Comm    | 0.32378    | 0.32378    | 0.32378    |   0.0 |  4.01
+Output  | 0.0011113  | 0.0011113  | 0.0011113  |   0.0 |  0.01
+Modify  | 0.6418     | 0.6418     | 0.6418     |   0.0 |  7.96
+Other   |            | 0.07536    |            |       |  0.93
+
+Nlocal:    54 ave 54 max 54 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:    786 ave 786 max 786 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:    2334 ave 2334 max 2334 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2334
+Ave neighs/atom = 43.2222
+Neighbor list builds = 7
+Dangerous builds = 0
+#------------------------------------------------------------------------------#
+
+#----------------------------- Next loop --------------------------------------#
+  # loop to next temperature
+  clear
+  next T
+  jump loopin.lmp
+# Brian Lam - brian.lam@berkeley.edu
+
+#--------------------------- General variables --------------------------------#
+  # Input parameters.
+  variable          a    equal 2.9115 # Lattice parameter.
+  variable          n    equal 3      # System size.
+  variable          P    equal 0      # Simulation pressure.
+  variable          t    equal 100000 # Simulation time.
+  variable          dt   equal 0.001  # Timestep.
+  variable          dt_t equal 100    # Thermo output stride.
+  variable          T    index 0 100 200 300 400 500 600 700 800 # Loop simulation temperature.
+
+  # Simulation variables.
+  variable          T0     equal 0.7*${T}    # Initial temperature.
+  variable          T0     equal 0.7*400    
+  variable          damp_T equal 100*${dt} # Thermostat damp parameter.
+  variable          damp_T equal 100*0.001 
+  variable          damp_P equal 100*${dt} # Barostat damp parameter.
+  variable          damp_P equal 100*0.001 
+
+#------------------------------------------------------------------------------#
+
+
+#---------------------------- Atomic setup ------------------------------------#
+  units             metal
+
+  # Create atoms.
+  lattice           bcc ${a}  # bcc lattice with unit cell size = a.
+  lattice           bcc 2.9115  
+Lattice spacing in x,y,z = 2.9115 2.9115 2.9115
+  region            sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi ...
+  region            sim_box block 0 3 0 ${n} 0 ${n} 
+  region            sim_box block 0 3 0 3 0 ${n} 
+  region            sim_box block 0 3 0 3 0 3 
+  create_box        1 sim_box # make box using region 'sim_box'.
+Created orthogonal box = (0 0 0) to (8.7345 8.7345 8.7345)
+  1 by 1 by 1 MPI processor grid
+  create_atoms      1 box     # place atoms within region on lattice.
+Created 54 atoms
+
+  # Interatomic potential information.
+  pair_style        eam
+  pair_coeff        * * Fe.eam
+  neigh_modify      delay 0
+  timestep          ${dt}
+  timestep          0.001
+#------------------------------------------------------------------------------#
+
+
+#-------------------- Fixes, computes, and constraints ------------------------#
+  # Integration and thermostat.
+  fix               f1 all nph iso ${P} ${P} ${damp_P}
+  fix               f1 all nph iso 0 ${P} ${damp_P}
+  fix               f1 all nph iso 0 0 ${damp_P}
+  fix               f1 all nph iso 0 0 0.1
+  fix               f2 all langevin ${T} ${T} ${damp_T} 666
+  fix               f2 all langevin 400 ${T} ${damp_T} 666
+  fix               f2 all langevin 400 400 ${damp_T} 666
+  fix               f2 all langevin 400 400 0.1 666
+#------------------------------------------------------------------------------#
+
+
+#--------------------------- Output setup -------------------------------------#
+  # Setup output variables.
+  variable          step equal step
+  variable          E    equal etotal/atoms
+  variable          ke   equal ke/atoms
+  variable          pe   equal pe/atoms
+  variable          lp   equal (xhi-xlo)/${n}
+  variable          lp   equal (xhi-xlo)/3
+
+  # Thermo output.
+  thermo_style      custom step pe ke
+  thermo            1000
+#------------------------------------------------------------------------------#
+
+
+#----------------------------- Run simulation ---------------------------------#
+  # Initial temperature to accelerate equilibration.
+  velocity          all create ${T0} 666 dist gaussian
+  velocity          all create 280 666 dist gaussian
+
+  # Print information to output file.
+  fix               f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no file output/thermo${T}.dat
+  fix               f5 all print 100 "${step} ${E} ${ke} ${pe} ${lp}"                          title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam"                     screen no f
