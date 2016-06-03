@@ -3,13 +3,13 @@
 #--------------------------- General variables --------------------------------#
   # Input parameters.
   variable         a    equal 2.903690603 # Lattice parameter for T=300K.
-  variable         n    equal 4          # System size.
+  variable         n    equal 4           # System size.
   variable         P    equal 0           # Simulation pressure.
   variable         t    equal 100000      # Simulation time.
   variable         dt   equal 0.001       # Timestep.
   variable         dt_t equal 100         # Thermo output stride.
   variable         T    equal 300         # Loop simulation temperature.
-
+  variable         surf equal 110         # Crystal surface.
   # Simulation variables.
   variable         T0     equal 0.7*${T}  # Initial temperature.
   variable         damp_T equal 100*${dt} # Thermostat damp parameter.
@@ -22,7 +22,7 @@
   units            metal
 
   # Create atoms.
-  lattice          bcc ${a} # bcc lattice with unit cell size = a.
+  lattice          bcc ${a} orient x 1 1 0 y -1 1 0 &
   region           sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi...
   boundary         p p s     # shrink-wrapped based on create_box
   create_box       1 sim_box # make box using region 'sim_box'.
@@ -64,9 +64,9 @@
   # Print information to output file.
   fix              f5 all print ${dt_t} "${step} ${E} ${ke} ${pe} ${lp}"      &
                    title "step E [eV/atom] ke [eV/atom] pe [eV/atom] latparam" &
-                   screen no file output/thermo100surf.dat
+                   screen no file output/thermo${surf}surf.dat
   # Dump to Ovito file.
-  dump             1 all custom 250 ovitodat100.dump id xs ys zs fx fy fz
+  dump             1 all custom 250 ovitodat${surf}.dump id xs ys zs fx fy fz
   # Run simulation.
   run              ${t}
 #------------------------------------------------------------------------------#
