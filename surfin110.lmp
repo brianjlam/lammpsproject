@@ -22,7 +22,7 @@
   units            metal
 
   # Create atoms.
-  lattice          bcc ${a} orient x 1 1 0 y -1 1 0 &
+  lattice          bcc ${a} orient x 1 1 0 orient y -1 1 0
   region           sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi...
   boundary         p p s     # shrink-wrapped based on create_box
   create_box       1 sim_box # make box using region 'sim_box'.

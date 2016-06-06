@@ -9,7 +9,7 @@
   variable         dt   equal 0.001       # Timestep.
   variable         dt_t equal 100         # Thermo output stride.
   variable         T    equal 300         # Loop simulation temperature.
-  variable         surf equal 110         # Crystal surface.
+  variable         surf equal 111         # Crystal surface.
   # Simulation variables.
   variable         T0     equal 0.7*${T}  # Initial temperature.
   variable         damp_T equal 100*${dt} # Thermostat damp parameter.
