@@ -3,9 +3,9 @@
 #--------------------------- General variables --------------------------------#
   # Input parameters.
   variable         a    equal 2.903690603 # Lattice parameter for T=300K.
-  variable         n    equal 4           # System size.
+  variable         n    equal 14           # System size.
   variable         P    equal 0           # Simulation pressure.
-  variable         t    equal 100000      # Simulation time.
+  variable         t    equal 400000      # Simulation time.
   variable         dt   equal 0.001       # Timestep.
   variable         dt_t equal 100         # Thermo output stride.
   variable         T    equal 300         # Loop simulation temperature.
