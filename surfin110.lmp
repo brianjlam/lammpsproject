@@ -3,7 +3,7 @@
 #--------------------------- General variables --------------------------------#
   # Input parameters.
   variable         a    equal 2.903690603 # Lattice parameter for T=300K.
-  variable         n    equal 10           # System size.
+  variable         n    equal 8           # System size.
   variable         P    equal 0           # Simulation pressure.
   variable         t    equal 300000      # Simulation time.
   variable         dt   equal 0.001       # Timestep.
@@ -22,7 +22,7 @@
   units            metal
 
   # Create atoms.
-  lattice          bcc ${a} orient x 1 1 0 orient y -1 1 0
+  lattice          bcc ${a} orient y 0 -1 1 orient z = 0 1 1
   region           sim_box block 0 ${n} 0 ${n} 0 ${n} # xlo xhi ylo yhi...
   boundary         p p s     # shrink-wrapped based on create_box
   create_box       1 sim_box # make box using region 'sim_box'.
